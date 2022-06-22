@@ -522,7 +522,7 @@ class Info(app_commands.Group):
 
 class Picture(app_commands.Group):
     @app_commands.command(name="filter", description="Avatar Filters")
-    async def filter(self, interaction: discord.Interaction, method: Literal[invert, greyscale, invertgreyscale, sepia, brightness, threshold], member: discord.Member = None):
+    async def filter(self, interaction: discord.Interaction, method: Literal["invert", "greyscale", "invertgreyscale", "sepia", "brightness", "threshold"], member: discord.Member = None):
         if member is None:
             member = interaction.user
             
