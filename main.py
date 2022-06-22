@@ -30,7 +30,7 @@ except ImportError:
     from mpmath import mp
 
 # Defining Server ID
-TGR_SERVER_ID = discord.Object(id=966238887456428052)
+TGL_SERVER_ID = discord.Object(id=966238887456428052)
 
 # Defining Auto Responses - Change this
 auto_responses = {
