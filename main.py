@@ -29,8 +29,9 @@ try:
 except ImportError:
     from mpmath import mp
 
-# Defining Server ID
+# Defining IDs
 TGL_SERVER_ID = discord.Object(id=966238887456428052)
+GB_COLOUR = 0xb27b56
 
 # Defining Auto Responses - Change this
 auto_responses = {
@@ -64,7 +65,7 @@ tree = bot.tree
 # Ready!
 @bot.event
 async def on_ready():
-    await bot.change_presence(status=discord.Status.online, activity=discord.Game("with Luziaf#0001 :)"))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Game("with Baba Luz :)"))
     print("GrogBot is ready")
 
 # Calculator View
@@ -274,9 +275,6 @@ class CalcView(discord.ui.View):
 # Chat Bot is Ready!
 @bot.listen('on_message')
 async def chatbot(message):
-    for word in slurs:
-        if word in message.content:
-            await message.delete()
     user_message = str(message.content)
     if message.author == bot.user:
         return
@@ -289,40 +287,39 @@ async def chatbot(message):
 #                     Commands Here!
 # -------------------------------------------------------
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Check bot latency")
+@tree.command(guild=TGL_SERVER_ID, description="Check bot latency")
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message(f"Pong! ({round(bot.latency, 4)}s)")
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Ask questions, get answers")
+@tree.command(guild=TGL_SERVER_ID, description="Ask questions, get answers")
+@app_commands.describe(question="So, what is your question?")
 async def eightball(interaction: discord.Interaction, *, question: str):
     responses = ["As I see it, yes.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
                  "Concentrate and ask again.", "Don’t count on it.", "It is certain.", "It is decidedly so.",
                  "Most likely.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Outlook good.",
                  "Reply hazy, try again.", "Signs point to yes.", "Very doubtful.", "Without a doubt.", "Yes.","Yes – definitely.", "You may rely on it."]
     response = random.choice(responses)
-    embed = discord.Embed(title='', description=f'Question : {question}\nAnswer : {response}', colour=0xb27b56)
+    embed = discord.Embed(title='', description=f'Question : {question}\nAnswer : {response}', colour=GB_COLOUR)
     embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
-# Optimised
-@tree.command(guild=TGL_SERVER_ID,
-              description="Get animal image as well as the fact")
-async def animal(interaction: discord.Interaction, animal: Literal["dog", "cat", "panda", "fox", "red_panda", "koala", "bird", "raccoon", "kangaroo"]):
-    response = urllib.request.urlopen(f"https://some-random-api.ml/animal/{animal}")
-    data = json.load(response)
+@tree.command(guild=TGL_SERVER_ID, description="Get animal image as well as the fact")
+@app_commands.describe(animal="What is the animal you want to see?")
+async def animal(interaction: discord.Interaction, animal: Literal["Dog", "Cat", "Panda", "Fox", "Red Panda", "Koala", "Bird", "Raccoon", "Kangaroo"]):
+    animal_name = animal.lower()
+    animal_name = animal_name.replace(" ", "_")
     
+    response = urllib.request.urlopen(f"https://some-random-api.ml/animal/{animal_name}")
+    data = json.load(response)
     image = data['image']
     fact = data['fact']
-
-    embed = discord.Embed(title="Here's an animal", description=f'Did you know? {fact}',colour=0xb27b56)
+    
+    embed = discord.Embed(title=f"Here's the {animal}", description=f'Did you know? {fact}',colour=GB_COLOUR)
     embed.set_image(url=image)
     embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Get MC Server data")
+@tree.command(guild=TGL_SERVER_ID, description="Get MC Server data")
 async def mcserv(interaction: discord.Interaction, server: str):
     server_data = requests.get(f'https://api.mcsrvstat.us/2/{server}')
     if server_data.status_code == 404:
@@ -334,7 +331,7 @@ async def mcserv(interaction: discord.Interaction, server: str):
         port = data['port']
         version: int = data['version']
 
-        embed = discord.Embed(title=f"Data for {server}", colour=0xb27b56)
+        embed = discord.Embed(title=f"Data for {server}", colour=GB_COLOUR)
         embed.set_thumbnail(url=f'https://api.mcsrvstat.us/icon/{server}')
         embed.add_field(name="IP", value=ip, inline=False)
         embed.add_field(name="Port", value=port, inline=False)
@@ -352,14 +349,13 @@ async def mcserv(interaction: discord.Interaction, server: str):
 
         await interaction.response.send_message(embed=embed)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Get MC Player data")
+@tree.command(guild=TGL_SERVER_ID, description="Get MC Player data")
 async def mcplayer(interaction: discord.Interaction, player: str):
     uuid = MojangAPI.get_uuid(player)
     command13 = f"`/give @p minecraft:player_head{{SkullOwner: \"{player}\"}}`"
     command12 = f"`/give @p minecraft:skull 1 3 {{SkullOwner: \"{player}\"}}`"
 
-    embed = discord.Embed(title=f"Player Data - {player}", colour=0xb27b56)
+    embed = discord.Embed(title=f"Player Data - {player}", colour=GB_COLOUR)
     embed.set_thumbnail(url=f'https://crafatar.com/renders/head/{uuid}?overlay')
     embed.add_field(name="UUID", value=uuid, inline=False)
     embed.add_field(name="Skin", value=f'https://crafatar.com/skins/{uuid}', inline=False)
@@ -371,8 +367,7 @@ async def mcplayer(interaction: discord.Interaction, player: str):
 
     await interaction.response.send_message(embed=embed)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Generate memes from random meme subreddits")
+@tree.command(guild=TGL_SERVER_ID, description="Generate memes from random meme subreddits")
 async def meme(interaction: discord.Interaction):
     memeapi = urllib.request.urlopen('https://meme-api.herokuapp.com/gimme')
     memedata = json.load(memeapi)
@@ -384,13 +379,12 @@ async def meme(interaction: discord.Interaction):
 
     embed = discord.Embed(title=memename,
                           description=f"Meme by {memeposter} from Subreddit {memesubreddit}",
-                          colour=0xb27b56)
+                          colour=GB_COLOUR)
     embed.set_image(url=memeurl)
     embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Convert temperatures")
+@tree.command(guild=TGL_SERVER_ID, description="Convert temperatures")
 async def tempconvert(interaction: discord.Interaction,
                       unit1: Literal['celsius', 'fahrenheit', 'reaumur', 'kelvin'],
                       unit2: Literal['celsius', 'fahrenheit', 'reaumur', 'kelvin'],
@@ -414,29 +408,25 @@ async def tempconvert(interaction: discord.Interaction,
     result = (temp2 / temp1) * num + x + k
     await interaction.response.send_message(f"{unit1.capitalize()} to {unit2.capitalize()}\n{result}")
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Purge messages from this channel")
+@tree.command(guild=TGL_SERVER_ID, description="Purge messages from this channel")
 @app_commands.checks.has_permissions(manage_messages=True)
 async def purge(interaction: discord.Interaction, amount: int):
     await interaction.channel.purge(limit=amount)
     await interaction.response.send_message(f"Deleted {amount} messages", ephemeral=True)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Ban the member")
+@tree.command(guild=TGL_SERVER_ID, description="Ban the member")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
 async def ban(interaction: discord.Interaction, member: discord.Member):
     await interaction.guild.ban(member)
     await interaction.response.send_message(f"Banned {member}", ephemeral=True)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Kick the member")
+@tree.command(guild=TGL_SERVER_ID, description="Kick the member")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
 async def kick(interaction: discord.Interaction, member: discord.Member):
     await interaction.guild.kick(member)
     await interaction.response.send_message(f"Kicked {member}", ephemeral=True)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Unban the member")
+@tree.command(guild=TGL_SERVER_ID, description="Unban the member")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
 async def unban(interaction: discord.Interaction, user: str):
     ctx = await bot.get_context(interaction)
@@ -450,20 +440,18 @@ async def unban(interaction: discord.Interaction, user: str):
         return await interaction.response.send_message("User is not banned", ephemeral=True)
     await interaction.response.send_message(f"Unbanned {user}", ephemeral=True)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Suggest anything, we'll hear your voices")
+@tree.command(guild=TGL_SERVER_ID, description="Suggest anything, we'll hear your voices")
 async def suggest(interaction: discord.Interaction, *, suggestion: str):
     channel = bot.get_channel(970247869070180354)
     embed = discord.Embed(title=f"Suggestion by {interaction.user}",
                           description=suggestion,
-                          colour=0xb27b56)
+                          colour=GB_COLOUR)
     embed.set_thumbnail(url=interaction.user.display_avatar.url)
     await channel.send(embed=embed)
 
     await interaction.response.send_message(f"Suggested!", ephemeral=True)
 
-@tree.command(guild=TGL_SERVER_ID,
-              description="Warn a person")
+@tree.command(guild=TGL_SERVER_ID, description="Warn a person")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
 async def warn(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason"):
     id = member.id
@@ -477,8 +465,7 @@ async def warn(interaction: discord.Interaction, member: discord.Member, reason:
     collection.update_one({"memberid": id}, {"$set":{"warns": new_count}})
     await interaction.response.send_message(f"Warned {member.mention} for {reason}, now they have {new_count} warn(s)")
     
-@tree.command(guild=TGL_SERVER_ID,
-              description="Apply for The Grog's Realm Minecraft Server")
+@tree.command(guild=TGL_SERVER_ID, description="Apply for The Grog's Realm Minecraft Server")
 async def apply(interaction: discord.Interaction):
     citizenshipBadge = interaction.guild.get_role(982221195430723634)
     if citizenshipBadge in interaction.user.roles:
@@ -500,7 +487,7 @@ class Info(app_commands.Group):
     async def whois(self, interaction: discord.Interaction, member: discord.Member = None):
         if member is None:
             member = interaction.user
-        embed = discord.Embed(title=f"User Info - {member}", colour=0xb27b56)
+        embed = discord.Embed(title=f"User Info - {member}", colour=GB_COLOUR)
         embed.set_thumbnail(url=member.avatar.url)
         embed.set_footer(text=f"Requested by - {interaction.user}", icon_url=interaction.user.avatar.url)
         embed.add_field(name='ID', value=member.id, inline=False)
@@ -515,7 +502,7 @@ class Info(app_commands.Group):
         if member is None:
             member = interaction.user
         member_avatar = member.display_avatar.url
-        embed = discord.Embed(title=f"{member.name}#{member.discriminator}'s avatar", colour=0xb27b56)
+        embed = discord.Embed(title=f"{member.name}#{member.discriminator}'s avatar", colour=GB_COLOUR)
         embed.set_image(url=member_avatar)
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
@@ -528,7 +515,7 @@ class Picture(app_commands.Group):
             
         response = f'https://some-random-api.ml/canvas/{method}?avatar={member.display_avatar.url}'
         
-        embed = discord.Embed(title=f"Image command - {method.capitalize()}", colour=0xb27b56)
+        embed = discord.Embed(title=f"Image command - {method.capitalize()}", colour=GB_COLOUR)
         embed.set_image(url=response)
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
@@ -620,7 +607,7 @@ class Math(app_commands.Group):
     @app_commands.command(name="calculator", description="Math feature")
     async def calculator(self, interaction: discord.Interaction):
         embed = discord.Embed(title='Calculator', description='`Enter your equation below`',
-                              colour=0xb27b56)
+                              colour=GB_COLOUR)
         await interaction.response.send_message(embed=embed, view=CalcView(interaction, embed))
 
 tree.add_command(Info(), guild=TGL_SERVER_ID)
