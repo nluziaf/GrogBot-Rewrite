@@ -417,7 +417,7 @@ async def nuke(interaction: discord.Interaction):
     await interaction.channel.delete(reason="Nuked Channel")
     clean_channel = await interaction.channel.clone(reason="Nuked Channel")
     
-    embed = discord.Embed(title=f"Boom! Channel {ctx.channel.name} has been nuked", description=f"Nuked by {interaction.user.mention}", colour=GB_COLOUR)
+    embed = discord.Embed(title=f"Boom! Channel {interaction.channel.name} has been nuked", description=f"Nuked by {interaction.user.mention}", colour=GB_COLOUR)
     
     await clean_channel.send(embed=embed)
     
