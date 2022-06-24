@@ -320,6 +320,7 @@ async def animal(interaction: discord.Interaction, animal: Literal["Dog", "Cat",
     await interaction.response.send_message(embed=embed)
 
 @tree.command(guild=TGL_SERVER_ID, description="Get MC Server data")
+@app_commands.describe(server="MC Server IP here (example : hypixel.net)")
 async def mcserv(interaction: discord.Interaction, server: str):
     server_data = requests.get(f'https://api.mcsrvstat.us/2/{server}')
     if server_data.status_code == 404:
@@ -350,6 +351,7 @@ async def mcserv(interaction: discord.Interaction, server: str):
         await interaction.response.send_message(embed=embed)
 
 @tree.command(guild=TGL_SERVER_ID, description="Get MC Player data")
+@app_commands.describe(player="MC In-Game Name (IGN) here (example : N_Luziaf)")
 async def mcplayer(interaction: discord.Interaction, player: str):
     uuid = MojangAPI.get_uuid(player)
     command13 = f"`/give @p minecraft:player_head{{SkullOwner: \"{player}\"}}`"
@@ -385,6 +387,7 @@ async def meme(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 @tree.command(guild=TGL_SERVER_ID, description="Convert temperatures")
+@app_commands.describe(unit1="First Temperature Unit (Convert from ...)", unit2="Second Temperature Unit (Convert to ...)", num="Number of the Temperature")
 async def tempconvert(interaction: discord.Interaction,
                       unit1: Literal['celsius', 'fahrenheit', 'reaumur', 'kelvin'],
                       unit2: Literal['celsius', 'fahrenheit', 'reaumur', 'kelvin'],
@@ -408,26 +411,40 @@ async def tempconvert(interaction: discord.Interaction,
     result = (temp2 / temp1) * num + x + k
     await interaction.response.send_message(f"{unit1.capitalize()} to {unit2.capitalize()}\n{result}")
 
+@tree.command(guild=TGL_SERVER_ID, description="Channel Nuke")
+@commands.has_permissions(administrator=True)
+async def nuke(interaction: discord.Interaction):
+    await interaction.channel.delete(reason="Nuked Channel")
+    clean_channel = await interaction.channel.clone(reason="Nuked Channel")
+    
+    embed = discord.Embed(title=f"Boom! Channel {ctx.channel.name} has been nuked", description=f"Nuked by {ctx.author.mention}", colour=GB_COLOUR)
+    
+    await clean_channel.send(embed=embed)
+    
 @tree.command(guild=TGL_SERVER_ID, description="Purge messages from this channel")
 @app_commands.checks.has_permissions(manage_messages=True)
+@app_commands.describe(amount="Amount of messages that you want to delete")
 async def purge(interaction: discord.Interaction, amount: int):
     await interaction.channel.purge(limit=amount)
     await interaction.response.send_message(f"Deleted {amount} messages", ephemeral=True)
 
 @tree.command(guild=TGL_SERVER_ID, description="Ban the member")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
+@app_commands.describe(member="Member who will be banned")
 async def ban(interaction: discord.Interaction, member: discord.Member):
     await interaction.guild.ban(member)
     await interaction.response.send_message(f"Banned {member}", ephemeral=True)
 
 @tree.command(guild=TGL_SERVER_ID, description="Kick the member")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
+@app_commands.describe(member="Member who will be kicked")
 async def kick(interaction: discord.Interaction, member: discord.Member):
     await interaction.guild.kick(member)
     await interaction.response.send_message(f"Kicked {member}", ephemeral=True)
 
 @tree.command(guild=TGL_SERVER_ID, description="Unban the member")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
+@app_commands.describe(user="ID of the user who will be unbanned")
 async def unban(interaction: discord.Interaction, user: str):
     ctx = await bot.get_context(interaction)
     try:
@@ -441,6 +458,7 @@ async def unban(interaction: discord.Interaction, user: str):
     await interaction.response.send_message(f"Unbanned {user}", ephemeral=True)
 
 @tree.command(guild=TGL_SERVER_ID, description="Suggest anything, we'll hear your voices")
+@app_commands.describe(suggestion="Suggestion")
 async def suggest(interaction: discord.Interaction, *, suggestion: str):
     channel = bot.get_channel(970247869070180354)
     embed = discord.Embed(title=f"Suggestion by {interaction.user}",
@@ -453,6 +471,7 @@ async def suggest(interaction: discord.Interaction, *, suggestion: str):
 
 @tree.command(guild=TGL_SERVER_ID, description="Warn a person")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
+@app_commands.describe(member="Member who will be warned", reason="Reason of warning")
 async def warn(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason"):
     id = member.id
     if collection.count_documents({"memberid": id}) == 0:
@@ -469,10 +488,10 @@ async def warn(interaction: discord.Interaction, member: discord.Member, reason:
 async def apply(interaction: discord.Interaction):
     citizenshipBadge = interaction.guild.get_role(982221195430723634)
     if citizenshipBadge in interaction.user.roles:
-        embed = discord.Embed(title="ERROR!", description=f"You are already verified")
+        embed = discord.Embed(title="ERROR!", description=f"You are already verified", colour=GB_COLOUR)
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
     else:
-        embed = discord.Embed(title="Verified", description=f"You are successfully verified")
+        embed = discord.Embed(title="Verified", description=f"You are successfully verified", colour=GB_COLOUR)
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.user.add_roles(citizenshipBadge)
 
@@ -484,6 +503,7 @@ async def apply(interaction: discord.Interaction):
 
 class Info(app_commands.Group):
     @app_commands.command(name="whois", description="Get user's information")
+    @app_commands.describe(member="Discord Member")
     async def whois(self, interaction: discord.Interaction, member: discord.Member = None):
         if member is None:
             member = interaction.user
@@ -498,6 +518,7 @@ class Info(app_commands.Group):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='avatar', description="Get user's information")
+    @app_commands.describe(member="Discord Member")
     async def avatar(self, interaction: discord.Interaction, member: discord.Member = None):
         if member is None:
             member = interaction.user
@@ -509,6 +530,7 @@ class Info(app_commands.Group):
 
 class Picture(app_commands.Group):
     @app_commands.command(name="filter", description="Avatar Filters")
+    @app_commands.describe(method="Filter methods", member="Discord Member")
     async def filter(self, interaction: discord.Interaction, method: Literal["invert", "greyscale", "invertgreyscale", "sepia", "brightness", "threshold"], member: discord.Member = None):
         if member is None:
             member = interaction.user
@@ -533,6 +555,7 @@ class Picture(app_commands.Group):
         await interaction.response.send_message(file=discord.File("Image.jpg"))
 
     @app_commands.command(name="marry", description="Marry a discord member")
+    @app_commands.describe(member="Discord Member to marry")
     async def marry(self, interaction: discord.Interaction, member: discord.Member):
         marriage = Image.open(r'./pics/thing.jpg')
         asset1 = interaction.user.display_avatar.with_size(128)
@@ -553,6 +576,7 @@ class Picture(app_commands.Group):
 
 class Math(app_commands.Group):
     @app_commands.command(name="trigonometry", description="Math feature")
+    @app_commands.describe(method="Trigonometry methods", deg="Number in degrees, not radians")
     async def trigonometry(self, interaction: discord.Interaction,
                            method: Literal['sin', 'sinh', 'asin', 'asinh', 'cos', 'cosh', 'acos', 'acosh', 'tan', 'tanh', 'atan', 'atanh'],
                            deg: int):
@@ -595,19 +619,20 @@ class Math(app_commands.Group):
             await interaction.response.send_message(result)
 
     @app_commands.command(name="pi", description="Math feature")
+    @app_commands.describe(decimals="Amount of Decimals")
     async def pi(self, interaction: discord.Interaction, decimals: int):
         mp.dps = decimals
         await interaction.response.send_message(mp.pi)
 
     @app_commands.command(name="factorial", description="Math feature")
+    @app_commands.describe(number="Factorial of ...")
     async def factorial(self, interaction: discord.Interaction, number: int):
         result = math.factorial(number)
         await interaction.response.send_message(result)
 
     @app_commands.command(name="calculator", description="Math feature")
     async def calculator(self, interaction: discord.Interaction):
-        embed = discord.Embed(title='Calculator', description='`Enter your equation below`',
-                              colour=GB_COLOUR)
+        embed = discord.Embed(title='Calculator', description='`Enter your equation below`', colour=GB_COLOUR)
         await interaction.response.send_message(embed=embed, view=CalcView(interaction, embed))
 
 tree.add_command(Info(), guild=TGL_SERVER_ID)
