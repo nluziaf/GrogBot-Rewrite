@@ -275,7 +275,7 @@ class CalcView(discord.ui.View):
 # Chat Bot is Ready!
 @bot.listen('on_message')
 async def chatbot(message):
-    user_message = str(message.content)
+    user_message = str(message.content.lower())
     if message.author == bot.user:
         return
     try:
