@@ -8,5 +8,3 @@ Official Repository for GrogBot Rewrite, now with Slash Commands.
 
 ## Discord
 Look at bot-dev-updates channel in staff category to check any POGress.
-
-Contributors : NLuziaf, Jerry.py

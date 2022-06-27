@@ -1,7 +1,5 @@
 
 # -----------------------------------------------------------
-# CONTRIBUTORS : NLUZIAF, JERRYDOTPY
-#
 # BEFORE CONTRIBUTING TO THIS PROJECT, READ README.MD FIRST!
 # CLOSED SOURCE PROJECT, DON'T SHARE IT TO OTHERS
 # -----------------------------------------------------------
@@ -12,7 +10,6 @@ import json
 import math
 import os
 import random
-import urllib
 from typing import Literal
 
 import discord
@@ -297,7 +294,8 @@ async def eightball(interaction: discord.Interaction, *, question: str):
     responses = ["As I see it, yes.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
                  "Concentrate and ask again.", "Don’t count on it.", "It is certain.", "It is decidedly so.",
                  "Most likely.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Outlook good.",
-                 "Reply hazy, try again.", "Signs point to yes.", "Very doubtful.", "Without a doubt.", "Yes.","Yes – definitely.", "You may rely on it."]
+                 "Reply hazy, try again.", "Signs point to yes.", "Very doubtful.", "Without a doubt.", "Yes.",
+                 "Yes – definitely.", "You may rely on it."]
     response = random.choice(responses)
     embed = discord.Embed(title='', description=f'Question : {question}\nAnswer : {response}', colour=GB_COLOUR)
     embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
@@ -309,8 +307,9 @@ async def animal(interaction: discord.Interaction, animal: Literal["Dog", "Cat",
     animal_name = animal.lower()
     animal_name = animal_name.replace(" ", "_")
     
-    response = urllib.request.urlopen(f"https://some-random-api.ml/animal/{animal_name}")
-    data = json.load(response)
+    response = requests.get(f'https://some-random-api.ml/animal/{animal_name}')
+    data = response.json()
+    
     image = data['image']
     fact = data['fact']
     
@@ -327,6 +326,7 @@ async def mcserv(interaction: discord.Interaction, server: str):
         await interaction.response.send_message("Server not found")
     else:
         data = server_data.json()
+        
         online: bool = data['debug']['ping']
         ip = data['ip']
         port = data['port']
@@ -371,8 +371,8 @@ async def mcplayer(interaction: discord.Interaction, player: str):
 
 @tree.command(guild=TGL_SERVER_ID, description="Generate memes from random meme subreddits")
 async def meme(interaction: discord.Interaction):
-    memeapi = urllib.request.urlopen('https://meme-api.herokuapp.com/gimme')
-    memedata = json.load(memeapi)
+    memeapi = requests.get('https://meme-api.herokuapp.com/gimme')
+    memedata = memeapi.json()
 
     memeurl = memedata['url']
     memename = memedata['title']
@@ -504,7 +504,7 @@ async def apply(interaction: discord.Interaction):
 class Info(app_commands.Group):
     @app_commands.command(name="whois", description="Get user's information")
     @app_commands.describe(member="Discord Member")
-    async def whois(self, interaction: discord.Interaction, member: discord.Member = None):
+    async def info_whois(self, interaction: discord.Interaction, member: discord.Member = None):
         if member is None:
             member = interaction.user
         embed = discord.Embed(title=f"User Info - {member}", colour=GB_COLOUR)
@@ -518,20 +518,20 @@ class Info(app_commands.Group):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='avatar', description="Get user's information")
-    @app_commands.describe(member="Discord Member")
-    async def avatar(self, interaction: discord.Interaction, member: discord.Member = None):
+    @app_commands.describe(member="Discord Member", )
+    async def info_avatar(self, interaction: discord.Interaction, type: Literal["Server avatar", "User avatar"], member: discord.Member = None):
         if member is None:
             member = interaction.user
-        member_avatar = member.display_avatar.url
+        avatar = member.display_avatar.url if type == "Server avatar" else "User avatar"
         embed = discord.Embed(title=f"{member.name}#{member.discriminator}'s avatar", colour=GB_COLOUR)
-        embed.set_image(url=member_avatar)
+        embed.set_image(url=avatar)
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
 
 class Picture(app_commands.Group):
     @app_commands.command(name="filter", description="Avatar Filters")
     @app_commands.describe(method="Filter methods", member="Discord Member")
-    async def filter(self, interaction: discord.Interaction, method: Literal["invert", "greyscale", "invertgreyscale", "sepia", "brightness", "threshold"], member: discord.Member = None):
+    async def picture_filter(self, interaction: discord.Interaction, method: Literal["invert", "greyscale", "invertgreyscale", "sepia", "brightness", "threshold"], member: discord.Member = None):
         if member is None:
             member = interaction.user
             
@@ -543,7 +543,7 @@ class Picture(app_commands.Group):
         await interaction.response.send_message(embed=embed)
     
     @app_commands.command(name="eatme", description="Get eaten by Grog")
-    async def eatme(self, interaction: discord.Interaction):
+    async def picture_eatme(self, interaction: discord.Interaction):
         grog = Image.open(r'./pics/eatme.jpg')
         asset = interaction.user.display_avatar.with_size(256)
         data = io.BytesIO(await asset.read())
@@ -556,7 +556,7 @@ class Picture(app_commands.Group):
 
     @app_commands.command(name="marry", description="Marry a discord member")
     @app_commands.describe(member="Discord Member to marry")
-    async def marry(self, interaction: discord.Interaction, member: discord.Member):
+    async def picture_marry(self, interaction: discord.Interaction, member: discord.Member):
         marriage = Image.open(r'./pics/thing.jpg')
         asset1 = interaction.user.display_avatar.with_size(128)
         data1 = io.BytesIO(await asset1.read())
@@ -577,7 +577,7 @@ class Picture(app_commands.Group):
 class Math(app_commands.Group):
     @app_commands.command(name="trigonometry", description="Math feature")
     @app_commands.describe(method="Trigonometry methods", deg="Number in degrees, not radians")
-    async def trigonometry(self, interaction: discord.Interaction,
+    async def math_trigonometry(self, interaction: discord.Interaction,
                            method: Literal['sin', 'sinh', 'asin', 'asinh', 'cos', 'cosh', 'acos', 'acosh', 'tan', 'tanh', 'atan', 'atanh'],
                            deg: int):
         number = math.radians(deg)
@@ -620,18 +620,18 @@ class Math(app_commands.Group):
 
     @app_commands.command(name="pi", description="Math feature")
     @app_commands.describe(decimals="Amount of Decimals")
-    async def pi(self, interaction: discord.Interaction, decimals: int):
+    async def math_pi(self, interaction: discord.Interaction, decimals: int):
         mp.dps = decimals
         await interaction.response.send_message(mp.pi)
 
     @app_commands.command(name="factorial", description="Math feature")
     @app_commands.describe(number="Factorial of ...")
-    async def factorial(self, interaction: discord.Interaction, number: int):
+    async def math_factorial(self, interaction: discord.Interaction, number: int):
         result = math.factorial(number)
         await interaction.response.send_message(result)
 
     @app_commands.command(name="calculator", description="Math feature")
-    async def calculator(self, interaction: discord.Interaction):
+    async def math_calculator(self, interaction: discord.Interaction):
         embed = discord.Embed(title='Calculator', description='`Enter your equation below`', colour=GB_COLOUR)
         await interaction.response.send_message(embed=embed, view=CalcView(interaction, embed))
 
