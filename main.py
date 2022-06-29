@@ -456,7 +456,7 @@ async def unban(interaction: discord.Interaction, user: str):
 # TEMPORARY WARNING SYSTEM!
 @tree.command(guild=TGL_SERVER_ID, description="Warning the member")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
-@app_commands.describe(user="Member who will be warned")
+@app_commands.describe(member="Member who will be warned")
 async def warn(interaction: discord.Interaction, member: discord.Member, reason: str):
     channel = bot.get_channel(991651367078866944)
     embed = discord.Embed(title=f"Warning Log",
