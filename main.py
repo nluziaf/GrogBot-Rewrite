@@ -1,12 +1,9 @@
-
 # -----------------------------------------------------------
 # BEFORE CONTRIBUTING TO THIS PROJECT, READ README.MD FIRST!
-# CLOSED SOURCE PROJECT, DON'T SHARE IT TO OTHERS
 # -----------------------------------------------------------
 
 import asyncio
 import io
-import json
 import math
 import os
 import random
@@ -19,7 +16,6 @@ from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 from mojang import MojangAPI
-from pymongo import MongoClient
 
 try:
     from sympy.mpmath import mp
@@ -48,12 +44,7 @@ auto_responses = {
 
 # .env Stuffs!
 load_dotenv()
-DB = os.getenv("DB_LINK") # Database using MongoDB
 TKN = os.getenv("TOKEN") # Token, hahaha it's in .env kekw
-
-cluster = MongoClient(DB)
-database = cluster['Warnings']
-collection = database['WarningsSystem']
 
 # Defining Bot, no prefixed commands here!
 bot = commands.Bot(command_prefix='.', intents=discord.Intents.all(), help_command=None)
@@ -280,6 +271,11 @@ async def chatbot(message):
     except KeyError:
         pass
 
+def query_processing(query: str):
+    query = query.lower() # Making it lower
+    new_query = query.replace(" ", "") # Removing space
+    return new_query
+
 # -------------------------------------------------------
 #                     Commands Here!
 # -------------------------------------------------------
@@ -457,6 +453,8 @@ async def unban(interaction: discord.Interaction, user: str):
         return await interaction.response.send_message("User is not banned", ephemeral=True)
     await interaction.response.send_message(f"Unbanned {user}", ephemeral=True)
 
+# TODO : REWRITING WARNING SYSTEM!
+
 @tree.command(guild=TGL_SERVER_ID, description="Suggest anything, we'll hear your voices")
 @app_commands.describe(suggestion="Suggestion")
 async def suggest(interaction: discord.Interaction, *, suggestion: str):
@@ -468,21 +466,6 @@ async def suggest(interaction: discord.Interaction, *, suggestion: str):
     await channel.send(embed=embed)
 
     await interaction.response.send_message(f"Suggested!", ephemeral=True)
-
-@tree.command(guild=TGL_SERVER_ID, description="Warn a person")
-@app_commands.checks.has_permissions(kick_members=True, ban_members=True)
-@app_commands.describe(member="Member who will be warned", reason="Reason of warning")
-async def warn(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason"):
-    id = member.id
-    if collection.count_documents({"memberid": id}) == 0:
-        collection.insert_one({"memberid": id, "warns": 0})
-
-    warn_count = collection.find_one({"memberid": id})
-    count = warn_count["warns"]
-    new_count = count + 1
-
-    collection.update_one({"memberid": id}, {"$set":{"warns": new_count}})
-    await interaction.response.send_message(f"Warned {member.mention} for {reason}, now they have {new_count} warn(s)")
     
 @tree.command(guild=TGL_SERVER_ID, description="Apply for The Grog's Realm Minecraft Server")
 async def apply(interaction: discord.Interaction):
@@ -518,11 +501,11 @@ class Info(app_commands.Group):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='avatar', description="Get user's information")
-    @app_commands.describe(member="Discord Member", )
-    async def info_avatar(self, interaction: discord.Interaction, type: Literal["Server avatar", "User avatar"], member: discord.Member = None):
+    @app_commands.describe(type="Which avatar? (Default is Server avatar)", member="Discord Member")
+    async def info_avatar(self, interaction: discord.Interaction, type: Literal["Server avatar", "User avatar"] = "Server avatar", member: discord.Member = None):
         if member is None:
             member = interaction.user
-        avatar = member.display_avatar.url if type == "Server avatar" else "User avatar"
+        avatar = member.display_avatar.url if type == "Server avatar" else member.avatar.url
         embed = discord.Embed(title=f"{member.name}#{member.discriminator}'s avatar", colour=GB_COLOUR)
         embed.set_image(url=avatar)
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
@@ -530,14 +513,15 @@ class Info(app_commands.Group):
 
 class Picture(app_commands.Group):
     @app_commands.command(name="filter", description="Avatar Filters")
-    @app_commands.describe(method="Filter methods", member="Discord Member")
-    async def picture_filter(self, interaction: discord.Interaction, method: Literal["invert", "greyscale", "invertgreyscale", "sepia", "brightness", "threshold"], member: discord.Member = None):
+    @app_commands.describe(filter="Filter", member="Discord Member")
+    async def picture_filter(self, interaction: discord.Interaction, filter: Literal["Invert", "Greyscale", "Invert Greyscale", "Sepia", "Brightness", "Threshold"], member: discord.Member = None):
+        filter_name = query_processing(filter)
         if member is None:
             member = interaction.user
             
-        response = f'https://some-random-api.ml/canvas/{method}?avatar={member.display_avatar.url}'
+        response = f'https://some-random-api.ml/canvas/{filter_name}?avatar={member.display_avatar.url}'
         
-        embed = discord.Embed(title=f"Image command - {method.capitalize()}", colour=GB_COLOUR)
+        embed = discord.Embed(title=f"Filter command - {filter}", colour=GB_COLOUR)
         embed.set_image(url=response)
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
