@@ -438,7 +438,7 @@ async def kick(interaction: discord.Interaction, member: discord.Member):
     await interaction.guild.kick(member)
     await interaction.response.send_message(f"Kicked {member}", ephemeral=True)
 
-@tree.command(guild=TGL_SERVER_ID, description="Unban the member")
+@tree.command(guild=TGL_SERVER_ID, description="Unban the user")
 @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
 @app_commands.describe(user="ID of the user who will be unbanned")
 async def unban(interaction: discord.Interaction, user: str):
@@ -453,7 +453,19 @@ async def unban(interaction: discord.Interaction, user: str):
         return await interaction.response.send_message("User is not banned", ephemeral=True)
     await interaction.response.send_message(f"Unbanned {user}", ephemeral=True)
 
-# TODO : REWRITING WARNING SYSTEM!
+# TEMPORARY WARNING SYSTEM!
+@tree.command(guild=TGL_SERVER_ID, description="Warning the member")
+@app_commands.checks.has_permissions(kick_members=True, ban_members=True)
+@app_commands.describe(user="Member who will be warned")
+async def warn(interaction: discord.Interaction, member: discord.Member, reason: str):
+    channel = bot.get_channel(991651367078866944)
+    embed = discord.Embed(title=f"Warning Log",
+                          description = f"{interaction.user} warned {member.mention}\nReason: {reason}",
+                          colour=GB_COLOUR)
+    embed.set_thumbnail(url=member.display_avatar.url)
+    await channel.send(embed=embed)
+    
+    await interaction.response.send_message(f"Warned {member.mention} for {reason}!")
 
 @tree.command(guild=TGL_SERVER_ID, description="Suggest anything, we'll hear your voices")
 @app_commands.describe(suggestion="Suggestion")
