@@ -35,10 +35,11 @@ auto_responses = {
     "no u": 'No u',
     "amogus": 'https://tenor.com/view/among-us-twerk-vrchat-among-us-sus-sushi-gif-23196207',
     "rickroll": 'https://tenor.com/view/rick-roll-rick-ashley-never-gonna-give-you-up-gif-22113173',
-    "superidol": 'https://tenor.com/view/super-idol-gif-23526928',
-    "japanesegoblin": 'https://tenor.com/view/suika-touhou-japanese-goblin-ibuki-gif-23549706',
-    "paketphoenix": 'https://tenor.com/view/indi-home-phoenix-indi-home-paket-phoenix-gif-17421920',
-    "valveguy": 'https://tenor.com/view/valve-valve-guy-half-life-half-life2-portal-gif-24740578',
+    "krissed": 'https://tenor.com/view/teteshrek-krisjennerreaction-bts-reaction-gif-22914484',
+    "super idol": 'https://tenor.com/view/super-idol-gif-23526928',
+    "japanese goblin": 'https://tenor.com/view/suika-touhou-japanese-goblin-ibuki-gif-23549706',
+    "paket phoenix": 'https://tenor.com/view/indi-home-phoenix-indi-home-paket-phoenix-gif-17421920',
+    "valve guy": 'https://tenor.com/view/valve-valve-guy-half-life-half-life2-portal-gif-24740578',
     "haram": "https://tenor.com/view/haram-heisenberg-gif-20680378",
     "shut": "** **"
 }
@@ -81,24 +82,10 @@ def query_processing(query: str):
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message(f"Pong! ({round(bot.latency, 4)}s)")
 
-@tree.command(guild=TGL_SERVER_ID, description="Ask questions, get answers")
-@app_commands.describe(question="So, what is your question?")
-async def eightball(interaction: discord.Interaction, *, question: str):
-    responses = ["As I see it, yes.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
-                 "Concentrate and ask again.", "Don’t count on it.", "It is certain.", "It is decidedly so.",
-                 "Most likely.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Outlook good.",
-                 "Reply hazy, try again.", "Signs point to yes.", "Very doubtful.", "Without a doubt.", "Yes.",
-                 "Yes – definitely.", "You may rely on it."]
-    response = random.choice(responses)
-    embed = discord.Embed(title='', description=f'Question : {question}\nAnswer : {response}', colour=GB_COLOUR)
-    embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
-    await interaction.response.send_message(embed=embed)
-
 @tree.command(guild=TGL_SERVER_ID, description="Get animal image as well as the fact")
 @app_commands.describe(animal="What is the animal you want to see?")
 async def animal(interaction: discord.Interaction, animal: Literal["Dog", "Cat", "Panda", "Fox", "Red Panda", "Koala", "Bird", "Raccoon", "Kangaroo"]):
-    animal_name = animal.lower()
-    animal_name = animal_name.replace(" ", "_")
+    animal_name = query_processing(animal_name)
     
     response = requests.get(f'https://some-random-api.ml/animal/{animal_name}')
     data = response.json()
@@ -160,23 +147,6 @@ async def mcplayer(interaction: discord.Interaction, player: str):
     embed.set_image(url=f'https://crafatar.com/renders/body/{uuid}?overlay')
     embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
 
-    await interaction.response.send_message(embed=embed)
-
-@tree.command(guild=TGL_SERVER_ID, description="Generate memes from random meme subreddits")
-async def meme(interaction: discord.Interaction):
-    memeapi = requests.get('https://meme-api.herokuapp.com/gimme')
-    memedata = memeapi.json()
-
-    memeurl = memedata['url']
-    memename = memedata['title']
-    memeposter = memedata['author']
-    memesubreddit = memedata['subreddit']
-
-    embed = discord.Embed(title=memename,
-                          description=f"Meme by {memeposter} from Subreddit {memesubreddit}",
-                          colour=GB_COLOUR)
-    embed.set_image(url=memeurl)
-    embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
     await interaction.response.send_message(embed=embed)
 
 @tree.command(guild=TGL_SERVER_ID, description="Convert temperatures")
@@ -438,9 +408,115 @@ class CalcView(discord.ui.View):
         await inter.edit_original_message(embed=self.new_embed(button.label))
 
 # COMMAND CLASSES
+class Fun(app_commands.Group):
+    binary = app_commands.Group(name='binary', description='Binary Encode/Decode')
+    base64 = app_commands.Group(name='base64', description='Base64 Encode/Decode')
+    
+    @app_commands.command(name="8ball", description="Ask questions, get answers")
+    @app_commands.describe(question="So, what is your question?")
+    async def eightball(self, interaction: discord.Interaction, *, question: str):
+        responses = ["As I see it, yes.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
+                    "Concentrate and ask again.", "Do not count on it.", "It is certain.", "It is decidedly so.",
+                    "Most likely.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Outlook good.",
+                    "Reply hazy, try again.", "Signs point to yes.", "Very doubtful.", "Without a doubt.", "Yes.",
+                    "Yes, definitely.", "You may rely on it."]
+        response = random.choice(responses)
+        embed = discord.Embed(title='', description=f'Question : {question}\nAnswer : {response}', colour=GB_COLOUR)
+        embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        await interaction.response.send_message(embed=embed)
+    
+    @app_commands.command(name="joke", description="Get a joke")
+    async def joke(self, interaction: discord.Interaction):
+        response = requests.get('https://some-random-api.ml/joke')
+        data = response.json()
+        
+        joke = data['joke']
+        
+        embed = discord.Embed(title="Here's a joke", description=joke, colour=GB_COLOUR)
+        embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        await interaction.response.send_message(embed=embed)
+    
+    @app_commands.command(name="meme", description="Generate memes from random meme subreddits")
+    async def meme(self, interaction: discord.Interaction):
+        memeapi = requests.get('https://meme-api.herokuapp.com/gimme')
+        memedata = memeapi.json()
+
+        memeurl = memedata['url']
+        memename = memedata['title']
+        memeposter = memedata['author']
+        memesubreddit = memedata['subreddit']
+
+        embed = discord.Embed(title=memename, description=f"Meme by {memeposter} from Subreddit {memesubreddit}", colour=GB_COLOUR)
+        embed.set_image(url=memeurl)
+        embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="token", description="Mess up with other bot devs")
+    async def token(self, interaction: discord.Interaction):
+        response = requests.get('https://some-random-api.ml/bottoken')
+        data = response.json()
+        
+        faketoken = data['token']
+        
+        embed = discord.Embed(title="Haha! I got your bot token!", description=faketoken, colour=GB_COLOUR)
+        embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        await interaction.response.send_message(embed=embed)
+    
+    @binary.command(name="encode")
+    @app_commands.describe(string="String you want to encode")
+    async def binary_encode(self, interaction: discord.Interaction, string: str):
+        response = requests.get(f"https://some-random-api.ml/binary?encode={string}")
+        data = response.json()
+        
+        encoded = data['binary']
+        
+        embed = discord.Embed(title="Binary Encode", description=encoded, colour=GB_COLOUR)
+        embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        await interaction.response.send_message(embed=embed)
+        
+    @binary.command(name="decode")
+    @app_commands.describe(binary="Binary you want to decode")
+    async def binary_encode(self, interaction: discord.Interaction, binary: int):
+        response = requests.get(f"https://some-random-api.ml/binary?encode={binary}")
+        if 300 > response.status_code >= 200 :
+            data = response.json()
+            decoded = data['text']
+        
+            embed = discord.Embed(title="Binary Decode", description=decoded, colour=GB_COLOUR)
+            embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        else:
+            embed = discord.Embed(title="Binary Decode", description="Binary must contain only 0 or 1", colour=GB_COLOUR)
+            embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+
+        await interaction.response.send_message(embed=embed)
+    
+    @base64.command(name="encode")
+    @app_commands.describe(string="String you want to encode")
+    async def base64_encode(self, interaction: discord.Interaction, string: str):
+        response = requests.get(f"https://some-random-api.ml/base64?encode={string}")
+        data = response.json()
+        
+        encoded = data['base64']
+        
+        embed = discord.Embed(title="Base64 Encode", description=encoded, colour=GB_COLOUR)
+        embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        await interaction.response.send_message(embed=embed)
+        
+    @base64.command(name="decode")
+    @app_commands.describe(base64="Base64 you want to decode")
+    async def base64_decode(self, interaction: discord.Interaction, base64: str):
+        response = requests.get(f"https://some-random-api.ml/base64?decode={base64}")
+        data = response.json()
+        
+        decoded = data['text']
+        
+        embed = discord.Embed(title="Base64 Encode", description=decoded, colour=GB_COLOUR)
+        embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
+        await interaction.response.send_message(embed=embed)
+
 class Mod(app_commands.Group):
     @app_commands.command(name="nuke", description="Channel Nuke (ADMIN ONLY)")
-    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.checks.has_any_role(966239045241946166) # The Executive Role Only!
     async def nuke(self, interaction: discord.Interaction):
         await interaction.channel.delete(reason="Nuked Channel")
         clean_channel = await interaction.channel.clone(reason="Nuked Channel")
@@ -635,6 +711,7 @@ class Math(app_commands.Group):
         await interaction.response.send_message(embed=embed, view=CalcView(interaction, embed))
 
 # LOADING CLASSES
+tree.add_command(Fun(), guild=TGL_SERVER_ID)
 tree.add_command(Mod(), guild=TGL_SERVER_ID)
 tree.add_command(Info(), guild=TGL_SERVER_ID)
 tree.add_command(Picture(), guild=TGL_SERVER_ID)
