@@ -3,6 +3,7 @@
 # -----------------------------------------------------------
 
 import asyncio
+import aiofiles
 import io
 import math
 import os
@@ -51,12 +52,34 @@ TKN = os.getenv("TOKEN") # Token, hahaha it's in .env kekw
 # Defining Bot, no prefixed commands here!
 bot = commands.Bot(command_prefix='.', intents=discord.Intents.all(), help_command=None)
 tree = bot.tree
+bot.warnings = {}
 
 # Ready!
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=discord.Game("with Baba Luz :)"))
+    for guild in bot.guilds:
+        async with aiofiles.open(f'{guild.id}.txt', mode='a'):
+            pass
+        bot.warnings[guild.id] = {}
+    for guild in bot.guilds:
+        async with aiofiles.open(f'{guild.id}.txt', mode='r') as file:
+            lines = await file.readlines()
+            for line in lines:
+                data = line.split(" ")
+                member_id = int(data[0])
+                admin_id = int(data[1])
+                reason = " ".join(data[2:]).strip("\n")
+                try:
+                    bot.warnings[guild.id][member_id][0] += 1
+                    bot.warnings[guild.id][member_id][1].append(admin_id, reason)
+                except KeyError:
+                    bot.warnings[guild.id][member_id] = [1, [(admin_id, reason)]]
     print("GrogBot is ready")
+
+@bot.event
+async def on_guild_join(guild):
+    bot.warnings[guild.id] = {}
 
 # Chat Bot is Ready!
 @bot.listen('on_message')
@@ -186,7 +209,7 @@ async def suggest(interaction: discord.Interaction, *, suggestion: str):
 
     await interaction.response.send_message(f"Suggested!", ephemeral=True)
     
-@tree.command(guild=TGL_SERVER_ID, descripstion="Apply for The Grog's Realm Minecraft Server")
+@tree.command(guild=TGL_SERVER_ID, description="Apply for The Grog's Realm Minecraft Server")
 async def apply(interaction: discord.Interaction):
     citizenshipBadge = interaction.guild.get_role(982221195430723634)
     if citizenshipBadge in interaction.user.roles:
@@ -518,7 +541,7 @@ class Fun(app_commands.Group):
 
 class Mod(app_commands.Group):
     # TODO : Implementing Raid Protection.
-    # TODO : Implementing Better Warning System for GrogBot.
+    # TODO : Implementing Self Warning Protection.
     
     @app_commands.command(name="nuke", description="Channel Nuke (ADMIN ONLY)")
     @app_commands.checks.has_any_role(966239045241946166) # The Executive Role Only!
@@ -566,18 +589,26 @@ class Mod(app_commands.Group):
             return await interaction.response.send_message("User is not banned", ephemeral=True)
         await interaction.response.send_message(f"Unbanned {user}")
 
-    # TEMPORARY WARNING SYSTEM!
-    @app_commands.command(name="warn", description="Warning the member")
+    @app_commands.command(name="warn", description="Warn the member")
     @app_commands.checks.has_permissions(kick_members=True, ban_members=True)
     @app_commands.describe(member="Member who will be warned")
-    async def warn(self, interaction: discord.Interaction, member: discord.Member, reason: str):
-        channel = bot.get_channel(991651367078866944)
-        embed = discord.Embed(title=f"Warning Log",
-                            description = f"{interaction.user} warned {member.mention}\nReason: {reason}",
-                            colour=GB_COLOUR)
+    async def warn(self, interaction: discord.Interaction, member: discord.Member, *, reason: str = "No reason provided"):
+        try:
+            first_warning = False
+            bot.warnings[interaction.guild.id][member.id][0] += 1
+            bot.warnings[interaction.guild.id][member.id][1].append((interaction.user.id, reason))
+        except KeyError:
+            first_warning = True
+            bot.warnings[interaction.guild.id][member.id] = [1, [(interaction.user.id, reason)]]
+        count = bot.warnings[interaction.guild.id][member.id][0]
+        async with aiofiles.open(f"{interaction.guild.id}.txt", mode="a") as file:
+            await file.write(f"{member.id} {interaction.user.id} {reason}\n")
+                
+        log_channel = bot.get_channel(992275599844462634)
+        embed = discord.Embed(title=f"Warning Log", description = f"{interaction.user} warned {member.mention}\nReason: {reason}", colour=GB_COLOUR)
         embed.set_thumbnail(url=member.display_avatar.url)
-        await channel.send(embed=embed)
-        
+        await log_channel.send(embed=embed)
+            
         await interaction.response.send_message(f"Warned {member.mention} for {reason}!")
 
 class Info(app_commands.Group):

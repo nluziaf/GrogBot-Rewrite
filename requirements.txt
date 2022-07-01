@@ -4,4 +4,5 @@ Pillow~=9.1.1
 python-dotenv~=0.20.0
 mojang~=0.2.0
 mpmath~=1.2.1
+aiofiles~=0.8.0
 discord.py @ git+https://github.com/Rapptz/discord.py@f24f34e3f1fc350664cc93b1f57510bd9c714a7b
