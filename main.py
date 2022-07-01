@@ -186,7 +186,7 @@ async def suggest(interaction: discord.Interaction, *, suggestion: str):
 
     await interaction.response.send_message(f"Suggested!", ephemeral=True)
     
-@tree.command(guild=TGL_SERVER_ID, description="Apply for The Grog's Realm Minecraft Server")
+@tree.command(guild=TGL_SERVER_ID, descripstion="Apply for The Grog's Realm Minecraft Server")
 async def apply(interaction: discord.Interaction):
     citizenshipBadge = interaction.guild.get_role(982221195430723634)
     if citizenshipBadge in interaction.user.roles:
@@ -409,8 +409,10 @@ class CalcView(discord.ui.View):
 
 # COMMAND CLASSES
 class Fun(app_commands.Group):
-    binary = app_commands.Group(name='binary', description='Binary Encode/Decode')
-    base64 = app_commands.Group(name='base64', description='Base64 Encode/Decode')
+    # TODO : Implementing More Fun Commands.
+    
+    binary = app_commands.Group(name='binary', description="Binary Commands")
+    base64 = app_commands.Group(name='base64', description="Base64 Commands")
     
     @app_commands.command(name="8ball", description="Ask questions, get answers")
     @app_commands.describe(question="So, what is your question?")
@@ -462,7 +464,7 @@ class Fun(app_commands.Group):
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
     
-    @binary.command(name="encode")
+    @binary.command(name="encode", description="Encode to Binary")
     @app_commands.describe(string="String you want to encode")
     async def binary_encode(self, interaction: discord.Interaction, string: str):
         response = requests.get(f"https://some-random-api.ml/binary?encode={string}")
@@ -474,9 +476,9 @@ class Fun(app_commands.Group):
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
         
-    @binary.command(name="decode")
+    @binary.command(name="decode", description="Decode from Binary")
     @app_commands.describe(binary="Binary you want to decode")
-    async def binary_encode(self, interaction: discord.Interaction, binary: int):
+    async def binary_decode(self, interaction: discord.Interaction, binary: int):
         response = requests.get(f"https://some-random-api.ml/binary?encode={binary}")
         if 300 > response.status_code >= 200 :
             data = response.json()
@@ -490,7 +492,7 @@ class Fun(app_commands.Group):
 
         await interaction.response.send_message(embed=embed)
     
-    @base64.command(name="encode")
+    @base64.command(name="encode", description="Encode to Base64")
     @app_commands.describe(string="String you want to encode")
     async def base64_encode(self, interaction: discord.Interaction, string: str):
         response = requests.get(f"https://some-random-api.ml/base64?encode={string}")
@@ -502,7 +504,7 @@ class Fun(app_commands.Group):
         embed.set_footer(text=f"Command executed by {interaction.user}", icon_url=interaction.user.display_avatar.url)
         await interaction.response.send_message(embed=embed)
         
-    @base64.command(name="decode")
+    @base64.command(name="decode", description="Decode from Base64")
     @app_commands.describe(base64="Base64 you want to decode")
     async def base64_decode(self, interaction: discord.Interaction, base64: str):
         response = requests.get(f"https://some-random-api.ml/base64?decode={base64}")
@@ -515,6 +517,9 @@ class Fun(app_commands.Group):
         await interaction.response.send_message(embed=embed)
 
 class Mod(app_commands.Group):
+    # TODO : Implementing Raid Protection.
+    # TODO : Implementing Better Warning System for GrogBot.
+    
     @app_commands.command(name="nuke", description="Channel Nuke (ADMIN ONLY)")
     @app_commands.checks.has_any_role(966239045241946166) # The Executive Role Only!
     async def nuke(self, interaction: discord.Interaction):
@@ -605,7 +610,7 @@ class Info(app_commands.Group):
 class Picture(app_commands.Group):
     @app_commands.command(name="filter", description="Avatar Filters")
     @app_commands.describe(filter="Filter", member="Discord Member")
-    async def picture_filter(self, interaction: discord.Interaction, filter: Literal["Invert", "Greyscale", "Invert Greyscale", "Sepia", "Brightness", "Threshold"], member: discord.Member = None):
+    async def picture_filter(self, interaction: discord.Interaction, filter: Literal["Invert", "Greyscale", "Invert Greyscale", "Sepia", "Brightness", "Threshold", "Pixelate", "Blur"], member: discord.Member = None):
         filter_name = query_processing(filter)
         if member is None:
             member = interaction.user
@@ -719,13 +724,13 @@ tree.add_command(Math(), guild=TGL_SERVER_ID)
 
 # RUNNING THE BOT
 
-async def sync_test_slash():
+async def sync_slash():
     await bot.wait_for('ready')
     await tree.sync(guild=TGL_SERVER_ID)
 
 async def main():
     async with bot:
-        bot.loop.create_task(sync_test_slash())
+        bot.loop.create_task(sync_slash())
         await bot.start(TKN)
 
 asyncio.run(main())
